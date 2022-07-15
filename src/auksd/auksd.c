@@ -483,7 +483,7 @@ int auksd_main_loop(auksd_engine_t* engine)
 	int queued_item_nb;
 	int launched_worker_nb=0;
 	pthread_attr_t worker_attr;
-	size_t worker_stacksize= 3 * PTHREAD_STACK_MIN ;
+	size_t worker_stacksize= 5 * PTHREAD_STACK_MIN ;
 
 	auksd_worker_args_t* worker_args;
 
