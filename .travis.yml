@@ -1,15 +1,67 @@
 language: c
-
 os: linux
 
 arch:
   - amd64
   - arm64
+  - arm64-graviton2
 
 compiler:
   - gcc
 
-script:
-  - autoreconf -fvi
-  - ./configure
-  - make
+services:
+  - docker
+
+env:
+  - DOCKER_COMPOSE_VERSION=2.11.0 TESTS=yes
+  - TESTS=no
+
+stages:
+  - compile
+  - test
+
+before_install:
+  addons:
+    apt:
+        update: true
+
+before_install:
+  - sudo apt-get -y install python3-pip python3-setuptools
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - git clone https://github.com/criteo/kerberos-docker.git /tmp/kerberos-docker
+  - cd /tmp/kerberos-docker
+  - sudo python3 -m pip install -r requirements.txt
+  - make install
+
+jobs:
+  fast_finish: true
+  allow_failures:
+    - env: DOCKER_COMPOSE_VERSION=2.11.0 TESTS=yes
+  include:
+    - env: DOCKER_COMPOSE_VERSION=2.11.0 TESTS=yes
+      stage: compile
+      script:
+        - autoreconf -fvi
+        - ./configure
+        - make
+
+    - env: DOCKER_COMPOSE_VERSION=2.11.0 TESTS=yes
+      stage: test
+      script:
+        - docker exec -it krb5-machine-example-com kinit -k
+        - docker exec -it krb5-service-example-com kinit -k
+
+    - env: TESTS=no
+      stage: compile
+      script:
+        - autoreconf -fvi
+        - ./configure
+        - make
+
+    - env: TESTS=no
+      stage: test
+      script:
+        - true
