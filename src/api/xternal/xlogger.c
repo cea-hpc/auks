@@ -192,6 +192,9 @@ void xverbose_base(int level,char* format,va_list args){
   FILE* default_stream=stdout;
   FILE* stream;
 
+  if(level>xverbose_max_level)
+    return;
+
   if (xverbose_use_syslog) {
     xsyslog(LOG_INFO, format, args);
     return;
@@ -202,20 +205,19 @@ void xverbose_base(int level,char* format,va_list args){
   else
     stream=xverbose_stream;
 
-  if(level<=xverbose_max_level){
-    char time_string[128];
-    time(&current_time);
-    time_string[0]='\0';
-    ctime_r(&current_time,time_string);
-    time_string[strlen(time_string)-1]='\0';
-    VERBOSE_LOCK();
-    fprintf(stream,"%s [INFO%d] [euid=%u,pid=%u] ",time_string,level,
-	    geteuid(),getpid());
-    vfprintf(stream,format,args);
-    fprintf(stream,"\n");
-    fflush(stream);
-    VERBOSE_UNLOCK();
-  }
+  char time_string[128];
+  time(&current_time);
+  time_string[0]='\0';
+  ctime_r(&current_time,time_string);
+  time_string[strlen(time_string)-1]='\0';
+  VERBOSE_LOCK();
+  fprintf(stream,"%s [INFO%d] [euid=%u,pid=%u] ",time_string,level,
+	  geteuid(),getpid());
+  vfprintf(stream,format,args);
+  fprintf(stream,"\n");
+  fflush(stream);
+  VERBOSE_UNLOCK();
+
 }
 
 void xverbose(char* format,...){
@@ -267,6 +269,9 @@ void xdebug_base(int level,char* format,va_list args){
   FILE* default_stream=stdout;
   FILE* stream;
 
+  if (level>xdebug_max_level)
+    return;
+
   if (xdebug_use_syslog) {
     xsyslog(LOG_DEBUG, format, args);
     return;
@@ -277,19 +282,17 @@ void xdebug_base(int level,char* format,va_list args){
   else
     stream=xdebug_stream;
   
-  if(level<=xdebug_max_level){
-    char time_string[64];
-    time(&current_time);
-    time_string[0]='\0';
-    ctime_r(&current_time,time_string);
-    time_string[strlen(time_string)-1]='\0';
-    DEBUG_LOCK();
-    fprintf(stream,"%s [DBUG%d] ",time_string,level);
-    vfprintf(stream,format,args);
-    fprintf(stream,"\n");
-    fflush(stream);
-    DEBUG_UNLOCK();
-  }
+  char time_string[64];
+  time(&current_time);
+  time_string[0]='\0';
+  ctime_r(&current_time,time_string);
+  time_string[strlen(time_string)-1]='\0';
+  DEBUG_LOCK();
+  fprintf(stream,"%s [DBUG%d] ",time_string,level);
+  vfprintf(stream,format,args);
+  fprintf(stream,"\n");
+  fflush(stream);
+  DEBUG_UNLOCK();
   
 }
 

@@ -316,7 +316,6 @@ auks_engine_init(auks_engine_t * engine,
 		}
 	}
 
-
 	xverbose_setmaxlevel(loglevel);
 	xerror_setmaxlevel(loglevel);
 	xdebug_setmaxlevel(debuglevel);
@@ -362,6 +361,7 @@ auks_engine_set_loglevel(auks_engine_t * engine,int loglevel)
 	engine->loglevel = loglevel;
 	xverbose_setmaxlevel(loglevel);
 	xerror_setmaxlevel(loglevel);
+	xdebug_setmaxlevel(loglevel);
 	
 	return fstatus;	
 }
