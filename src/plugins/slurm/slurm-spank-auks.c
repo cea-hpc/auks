@@ -305,8 +305,17 @@ slurm_spank_user_init (spank_t sp, int ac, char **av)
 		   and try to take some additions security protections.
 		   Renewer process doesn't need to go back to the original uid
 		*/
-		setresgid(getegid(), getegid(), getegid());
-		setresuid(geteuid(), geteuid(), geteuid());
+		if ( setresgid(getegid(), getegid(), getegid()) ){
+			xerror("Error while dropping privileges for credential renewer: ",
+			       strerror(errno));
+			exit(1);
+		}
+
+		if ( setresuid(geteuid(), geteuid(), geteuid()) ){
+			xerror("Error while dropping privileges for credential renewer: ",
+			       strerror(errno));
+			exit(1);
+		}
 		sigset_t mask;
 		sigemptyset(&mask);
 		sigprocmask(SIG_SETMASK, &mask, NULL);
