@@ -301,6 +301,12 @@ slurm_spank_user_init (spank_t sp, int ac, char **av)
 		xerror("unable to launch renewer process");
 	}
 	else if ( renewer_pid == 0 ) {
+		/* Some calls like `secure_getenv` may detect that euid != uid
+		   and try to take some additions security protections.
+		   Renewer process doesn't need to go back to the original uid
+		*/
+		setresgid(getegid(), getegid(), getegid());
+		setresuid(geteuid(), geteuid(), geteuid());
 		sigset_t mask;
 		sigemptyset(&mask);
 		sigprocmask(SIG_SETMASK, &mask, NULL);
