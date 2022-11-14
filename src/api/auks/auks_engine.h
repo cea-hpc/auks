@@ -141,6 +141,7 @@
 #define DEFAULT_AUKSDRENEWER_DELAY      60
 #define DEFAULT_AUKSDRENEWER_MINLIFETIME 300
 
+#include <stdbool.h>
 
 /*! \addtogroup AUKS_ENGINE
  *  @{
@@ -183,6 +184,7 @@ typedef struct auks_engine {
 	FILE* logfd;
 	FILE* debugfd;
 
+        bool syslog;
 } auks_engine_t;
 
 /*!
@@ -247,7 +249,8 @@ auks_engine_init(auks_engine_t * engine,
 		 char* renewer_logfile,int renewer_loglevel,
 		 char* renewer_debugfile,int renewer_debuglevel,
 		 time_t renewer_delay,
-		 time_t renewer_minlifetime);
+		 time_t renewer_minlifetime,
+		 bool syslog);
 
 /*!
  * \brief Initialize auks engine structure from a configuration file

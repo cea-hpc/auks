@@ -101,6 +101,8 @@ static int xverbose_max_level=0;
 static int xdebug_max_level=0;
 static int xerror_max_level=1;
 static int xverbose_use_syslog=0;
+static int xdebug_use_syslog=0;
+static int xerror_use_syslog=0;
 
 static FILE* xerror_stream = NULL;
 static FILE* xverbose_stream = NULL;
@@ -126,16 +128,21 @@ void xerror(char* format,...){
   FILE* default_stream=stdout;
   FILE* stream;
 
+  va_list args;
+  va_start(args,format);
+
   if(!xerror_max_level)
     return;
+
+  if (xerror_use_syslog) {
+    xsyslog(LOG_ERR, format, args);
+    return;
+  }
 
   if(xerror_stream==NULL)
     stream=default_stream;
   else
     stream=xerror_stream;
-
-  va_list args;
-  va_start(args,format);
 
   time(&current_time);
   time_string[0]='\0';
@@ -166,20 +173,16 @@ void xverbose_usesyslog() {
   xverbose_use_syslog=1;
 }
 
+void xdebug_usesyslog() {
+  xdebug_use_syslog=1;
+}
+
+void xerror_usesyslog() {
+  xerror_use_syslog=1;
+}
+
 void xsyslog(int level, char *format, va_list args) {
-  int pri = LOG_INFO;
-  switch(level) {
-    case 1:
-      pri = LOG_DEBUG;
-      break;
-    case 2:
-      pri = LOG_INFO;
-      break;
-    case 3:
-      pri = LOG_ERR;
-      break;
-   }
-   vsyslog(pri, format, args);
+   vsyslog(level, format, args);
 }
 
 void xverbose_base(int level,char* format,va_list args){
@@ -190,7 +193,7 @@ void xverbose_base(int level,char* format,va_list args){
   FILE* stream;
 
   if (xverbose_use_syslog) {
-    xsyslog(level, format, args);
+    xsyslog(LOG_INFO, format, args);
     return;
   }
 
@@ -263,6 +266,11 @@ void xdebug_base(int level,char* format,va_list args){
 
   FILE* default_stream=stdout;
   FILE* stream;
+
+  if (xdebug_use_syslog) {
+    xsyslog(LOG_DEBUG, format, args);
+    return;
+  }
 
   if(xdebug_stream==NULL)
     stream=default_stream;

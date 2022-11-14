@@ -75,6 +75,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include <string.h>
 #include <limits.h>
@@ -168,7 +169,8 @@ auks_engine_init(auks_engine_t * engine,
 		 char* renewer_logfile,int renewer_loglevel,
 		 char* renewer_debugfile,int renewer_debuglevel,
 		 time_t renewer_delay,
-		 time_t renewer_minlifetime)
+		 time_t renewer_minlifetime,
+		 bool syslog)
 {
 	int fstatus = AUKS_ERROR ;
 
@@ -176,6 +178,8 @@ auks_engine_init(auks_engine_t * engine,
 
 	engine->logfd=NULL;
 	engine->debugfd=NULL;
+
+	engine->syslog=syslog;
 
 	init_strdup(engine->primary_hostname,
 		    primary_hostname);
@@ -301,16 +305,21 @@ auks_engine_init(auks_engine_t * engine,
 		  engine->renewer_delay);
 	auks_log2("engine %s is %d", "renewer min cred lifetime",
 		  engine->renewer_minlifetime);
+	auks_log2("engine %s is %d", "syslog",
+		  engine->syslog);
 	
-	if ( engine->logfile != NULL ) {
+	if ( engine->logfile != NULL && !engine->syslog) {
 		engine->logfd = fopen(engine->logfile,"a+");
 		if ( engine->logfd != NULL ) {
 			xverbose_setstream(engine->logfd);
 			xerror_setstream(engine->logfd);
 		}
-		xverbose_setmaxlevel(loglevel);
-		xerror_setmaxlevel(loglevel);
 	}
+
+
+	xverbose_setmaxlevel(loglevel);
+	xerror_setmaxlevel(loglevel);
+	xdebug_setmaxlevel(debuglevel);
 
 	fstatus = AUKS_SUCCESS ;
 
@@ -381,7 +390,7 @@ auks_engine_init_from_config_file(auks_engine_t * engine, char *conf_file)
 	char *lfile;
 	char *dfile;
 	
-	char *syslog;
+	char *syslog_str;
 	char *ll_str;
 	char *dl_str;
 	char *rnb_str;
@@ -390,6 +399,8 @@ auks_engine_init_from_config_file(auks_engine_t * engine, char *conf_file)
 	char *nat_str;
 	
 	long int ll, dl, rnb, timeout, delay;
+
+	bool syslog;
 
 	char *renewer_lfile;
 	char *renewer_dfile;
@@ -576,11 +587,14 @@ auks_engine_init_from_config_file(auks_engine_t * engine, char *conf_file)
 		if (dl == LONG_MIN || dl == LONG_MAX)
 			dl = DEFAULT_AUKS_DEBUGLEVEL;
 
-		syslog = config_GetKeyValueByName(config, i, "UseSyslog");
-		if (syslog != NULL) {
-			ll = strtol(syslog, NULL, 10);
-			if (ll != LONG_MIN && ll != LONG_MAX && ll != 0)
-				xverbose_usesyslog();
+		syslog_str = config_GetKeyValueByName(config, i, "UseSyslog");
+		if (syslog_str != NULL) {
+		  syslog = strtol(syslog_str, NULL, 10);
+		  if (syslog) {
+		    xverbose_usesyslog();
+		    xdebug_usesyslog();
+		    xerror_usesyslog();
+		  }
 		}
 
 		valid_block_nb++;
@@ -663,7 +677,8 @@ auks_engine_init_from_config_file(auks_engine_t * engine, char *conf_file)
 					   rnb,timeout,delay,nat,
 					   renewer_lfile,renewer_ll,
 					   renewer_dfile,renewer_dl,
-					   renewer_delay,renewer_minlifetime);
+					   renewer_delay,renewer_minlifetime,
+					   syslog);
 		
 	}
 	
