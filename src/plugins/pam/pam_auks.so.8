@@ -4,9 +4,8 @@
 pam_auks.so \- AUKS PAM session plugin
 
 .SH "SYNOPSIS"
-session	optional	\fBpam_auks.so\fR
-or
--session	optional	\fBpam_auks.so\fR
+.HP \w'\fBpam_auks\&.so\fR\ 'u
+\fBpam_auks\&.so\fR [quiet] [syslog]
 
 \fB
 .SH "DESCRIPTION"
@@ -14,7 +13,26 @@ or
 .LP
 \fBpam_auks.so\fR is a PAM plugin that updates krb5 credentials 
 to AUKS whenever the user logs in or unlocks their screen.
-This plugin is enabled by configuring /etc/pam.d/
+
+.SH "EXAMPLES"
+.PP
+If you need to update auks's credentials each time a user logs-in:  
+.PP
+.RS 4
+session optional pam_auks\&.so [arguments]
+.PP
+
+.SH "OPTIONS"
+.PP
+\fBquiet\fR
+.RS 4
+Whether to logs informative messages or not. Error messages are not affected.
+.RE
+.PP
+\fBsyslog\fR
+.RS 4
+Whether to use pam messages or syslog messages for the logs. Defaults to PAM logs (pam_verror/pam_vinfo).
+.RE
 
 .SH "COPYING"
 .LP
