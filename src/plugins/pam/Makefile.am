@@ -10,9 +10,9 @@ pamplugdir		=	/usr/lib64/security
 pamplug_LTLIBRARIES	=	pam_auks.la
 
 pam_auks_la_SOURCES	=	pam_auks.c
-pam_auks_la_CPPFLAGS	=	-I$(top_srcdir)/src/api $(PAM_CPPFLAGS) \
+pam_auks_la_CPPFLAGS	=	$(AM_CPPFLAGS) -I$(top_srcdir)/src/api $(PAM_CPPFLAGS) \
 				-DBINDIR=\"$(bindir)\"
-pam_auks_la_LDFLAGS	=	$(PAM_LDFLAGS) -module \
+pam_auks_la_LDFLAGS	=	$(PAM_LDFLAGS) $(LIBTIRPC) -module \
 				-avoid-version --export-dynamic --quiet
 pam_auks_la_LIBADD	=	$(LIBAUKSAPI)
 
