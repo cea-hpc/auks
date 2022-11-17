@@ -51,7 +51,7 @@ PKG_PROG_PKG_CONFIG([0.25])
 PKG_CHECK_MODULES([KRB5], [krb5])
 AC_CHECK_LIB([krb5], [k5_rc_resolve], 
 		     [AC_DEFINE([HAVE_K5_RC], 1, [Define to 1 if you have k5_rc_resolve() calls])],
-		      AC_CHECK_LIB([krb5], [krb5_rc_resolve],
+		      AC_CHECK_LIB([krb5], [krb5_rc_resolve_full],
 		      [AC_DEFINE([HAVE_K5_RC], 0, [Define to 1 if you have k5_rc_resolve() calls])]))
 
 dnl Files to build during configure

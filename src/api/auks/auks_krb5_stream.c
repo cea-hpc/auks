@@ -102,6 +102,20 @@ extern int errno;
 #include "auks/auks_krb5_stream.h"
 #include "auks/auks_log.h"
 
+extern krb5_error_code krb5_rc_initialize(krb5_context, krb5_rcache, krb5_deltat);
+#if HAVE_K5_RC == 1
+extern krb5_error_code k5_rc_resolve(krb5_context context, char *string_name,
+				     krb5_rcache *id);
+extern krb5_error_code k5_rc_close(krb5_context, krb5_rcache);
+#define KRB5_RC_RESOLVE(c,rc,s) k5_rc_resolve(c,s,rc)
+#define KRB5_RC_CLOSE(c,rc) k5_rc_close(c,rc)
+#else
+extern krb5_error_code krb5_rc_resolve_full(krb5_context context, krb5_rcache *id,
+                                    char *string_name);
+extern krb5_error_code krb5_rc_close(krb5_context, krb5_rcache);
+#define KRB5_RC_RESOLVE(c,rc,s) krb5_rc_resolve_full(c,rc,s)
+#define KRB5_RC_CLOSE(c,rc) krb5_rc_close(c,rc)
+#endif
 
 /* private functions definitions */
 #define LOCAL_PRINCIPAL 1
@@ -852,6 +866,39 @@ auks_krb5_stream_init_base(auks_krb5_stream_t * kstream, int stream,int flags)
 	}
 	kstream->auth_context_flag = 1;
 	auks_log("connection authentication context initialisation succeed");
+
+       /* disable replay cache if asked to (better scalability without it) */
+       if ( kstream->flags & AUKS_KRB5_STREAM_NO_RCACHE ) {
+               krb5_rcache rcache;
+               kstatus = KRB5_RC_RESOLVE(kstream->context,&rcache,
+                                              "none:");
+               if (kstatus) {
+                       auks_error("rcache resolve failed : %s",
+                                  error_message(kstatus));
+                       fstatus = AUKS_ERROR_KRB5_STREAM_CTX_SETRCACHE ;
+                       goto auth_ctx_exit;
+               }
+#if HAVE_K5_RC != 1
+               kstatus = krb5_rc_initialize(kstream->context,rcache,0);
+               if (kstatus) {
+                       auks_error("rcache initialisation failed : %s",
+                                  error_message(kstatus));
+                       KRB5_RC_CLOSE(kstream->context,rcache);
+                       fstatus = AUKS_ERROR_KRB5_STREAM_CTX_SETRCACHE ;
+                       goto auth_ctx_exit;
+               }
+#endif
+               kstatus = krb5_auth_con_setrcache(kstream->context,
+                                                 kstream->auth_context,
+                                                 rcache);
+               if (kstatus) {
+                       auks_error("unable to set rcache : %s",
+                                  error_message(kstatus));
+                       KRB5_RC_CLOSE(kstream->context,rcache);
+                       fstatus = AUKS_ERROR_KRB5_STREAM_CTX_SETRCACHE ;
+                       goto auth_ctx_exit;
+               }
+       }
 
 	/* kerberos : set auth context endpoints */
 	klocal_addr.addrtype = local_addr.sin_family;
