@@ -327,6 +327,9 @@ auks_strerror(int error)
 	case AUKS_ERROR_KRB5_STREAM_CTX_SETFLAGS :
 		return "krb5 stream : " "unable to set connection ctx flags" ;
 		break ;
+        case AUKS_ERROR_KRB5_STREAM_CTX_SETRCACHE :
+               return "krb5 stream : " "unable to set connection replay cache" ;
+               break ;
 	case AUKS_ERROR_KRB5_STREAM_CTX_GETPRINC :
 		return "krb5 stream : " "unable to get principal" ;
 		break ;
