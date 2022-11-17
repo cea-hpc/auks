@@ -24,7 +24,7 @@ libauksapi_la_CPPFLAGS	= 	-I../ -pthread \
 
 libauksapi_la_LDFLAGS	= 	$(LIB_LDFLAGS) \
 				-version-info 0:1:0 \
-				-lkrb5 -pthread
+				$(KRB5_LIBS) -pthread
 
 libauksapi_la_LIBADD	= 	../confparse/libconfig_parsing.la \
 				../xternal/libxternal.la
