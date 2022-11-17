@@ -7,9 +7,9 @@ sbin_PROGRAMS           =       auksd auksdrenewer
 auksd_SOURCES		=	auksd.c auksd_req.c auksd_req.h
 auksd_CPPFLAGS		=	$(AM_CPPFLAGS) -I$(srcdir)/../api
 auksd_LDADD		=	$(LIBAUKSAPI)
-auksd_LDFLAGS		=	$(LIB_LDFLAGS) -lkrb5 -pthread
+auksd_LDFLAGS		=	$(LIB_LDFLAGS) $(KRB5_LIBS) -pthread
 
 auksdrenewer_SOURCES	=	auksdrenewer.c
 auksdrenewer_CPPFLAGS	=	$(AM_CPPFLAGS) -I$(srcdir)/../api
 auksdrenewer_LDADD	=	$(LIBAUKSAPI)
-auksdrenewer_LDFLAGS	=	$(LIB_LDFLAGS) -lkrb5
+auksdrenewer_LDFLAGS	=	$(LIB_LDFLAGS) $(KRB5_LIBS)
