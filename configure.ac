@@ -54,6 +54,10 @@ AC_CHECK_LIB([krb5], [k5_rc_resolve],
 		      AC_CHECK_LIB([krb5], [krb5_rc_resolve],
 		      [AC_DEFINE([HAVE_K5_RC], 0, [Define to 1 if you have k5_rc_resolve() calls])]))
 
+AC_CHECK_LIB([krb5], [krb5_get_cred_via_tkt], [], [AC_MSG_ERROR(Missing krb5 internal function (k5-int.h))])
+AC_CHECK_LIB([krb5], [krb5_read_message], [], [AC_MSG_ERROR(Missing krb5 internal function (k5-int.h))])
+AC_CHECK_LIB([krb5], [krb5_write_message], [], [AC_MSG_ERROR(Missing krb5 internal function (k5-int.h))])
+
 dnl Files to build during configure
 AC_CONFIG_FILES([Makefile
 	        auks.spec

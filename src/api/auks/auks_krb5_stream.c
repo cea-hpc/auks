@@ -117,6 +117,9 @@ extern krb5_error_code krb5_rc_close(krb5_context, krb5_rcache);
 #define KRB5_RC_CLOSE(c,rc) krb5_rc_close(c,rc)
 #endif
 
+extern krb5_error_code krb5_read_message(krb5_context, krb5_pointer, krb5_data *);
+extern krb5_error_code krb5_write_message(krb5_context, krb5_pointer, krb5_data *);
+
 /* private functions definitions */
 #define LOCAL_PRINCIPAL 1
 #define REMOTE_PRINCIPAL 2

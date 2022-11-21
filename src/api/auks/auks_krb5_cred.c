@@ -100,6 +100,10 @@
 #include "auks/auks_krb5_cred.h"
 #include "auks/auks_log.h"
 
+extern krb5_error_code krb5_get_cred_via_tkt(krb5_context, krb5_creds *, krb5_flags,
+					     krb5_address *const *, krb5_creds *,
+					     krb5_creds **);
+
 /* Some data comparison and conversion functions.  */
 static inline int
 _krb_data_eq(krb5_data d1, krb5_data d2)
