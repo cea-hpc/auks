@@ -240,6 +240,30 @@ void
 xsyslog(int level,char* format,va_list args);
 
 /*!
+ * \fn xverbose_usesyslog()
+ * \brief Enable logging through syslog facility for verbose logs
+ *
+*/
+void
+xverbose_usesyslog();
+
+/*!
+ * \fn xdebug_usesyslog()
+ * \brief Enable logging through syslog facility for debug logs
+ *
+*/
+void
+xdebug_usesyslog();
+
+/*!
+ * \fn xerrr_usesyslog()
+ * \brief Enable logging through syslog facility for error logs
+ *
+*/
+void
+xerror_usesyslog();
+
+/*!
  * @}
 */
 

@@ -174,6 +174,18 @@ int auks_cred_extract(auks_cred_t* credential,char* ccache);
 int auks_cred_store(auks_cred_t* credential,char* ccache);
 
 /*!
+ * \brief Test whether an auks credential is renewable
+ *
+ * \param credential pointer on the auks credential structure to renew
+ * \param minlifetime Minimum lifetime before triggering a renew
+ *
+ * \retval AUKS_SUCCESS
+ * \retval AUKS_ERROR
+ * \retval AUKS_ERROR_...
+ */
+int auks_cred_renew_test(auks_cred_t* credential,int minlifetime);
+
+/*!
  * \brief Renew an auks credential in place
  *
  * \param credential pointer on the auks credential structure to renew
