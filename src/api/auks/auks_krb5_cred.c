@@ -132,7 +132,8 @@ auks_krb5_cc_new_unique(char ** fullname_out)
 	krb5_context context;
 	krb5_ccache ccache;
 
-	char *ccache_type = NULL, *ccache_name = NULL;
+	const char *ccache_type = NULL;
+	char *ccache_name = NULL;
 
 	/* Initialize KRB5 context */
 	fstatus = krb5_init_context(&context);
@@ -195,7 +196,7 @@ auks_krb5_cc_switch(char *ccache_name)
 
 	krb5_context context;
 	krb5_ccache ccache = NULL;
-	char *ccache_type = NULL;
+	const char *ccache_type = NULL;
 
 	/* initialize krb5 context */
 	fstatus = krb5_init_context(&context);
