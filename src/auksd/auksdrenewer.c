@@ -94,6 +94,7 @@
 #include "auks/auks_engine.h"
 #include "auks/auks_cred.h"
 #include "auks/auks_cred_repo.h"
+#include "auks/auks_api.h"
 
 #include "auksd_req.h"
 

@@ -227,6 +227,23 @@ int
 auks_api_renew_cred(auks_engine_t * engine,char* cred_cache,int mode);
 
 /*!
+ * \brief Renew a credential using one of the Auks server
+ *
+ * \param engine pointer on the engine structure to use
+ * \param cred2r credential to be renewed
+ * \param mode one of the following values
+ *        AUKS_API_RENEW_ONCE
+ *        AUKS_API_RENEW_UNTIL_EXPIRATION
+ *        AUKS_API_RENEW_UNTIL_REMOVAL
+ *
+ * \retval AUKS_SUCCESS
+ * \retval AUKS_ERROR
+ * \retval AUKS_ERROR_...
+ */
+int
+auks_api_renew_auks_cred(auks_engine_t * engine,auks_cred_t* cred2r,int mode);
+
+/*!
  * \brief Send a remove request to one of the Auks server
  *
  * \param engine pointer on the engine structure to use
