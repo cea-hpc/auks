@@ -230,6 +230,16 @@ void
 xdebugN(int level,char* format,...);
 
 /*!
+ * \fn xsyslog(int level, char* format,...)
+ * \brief print message in syslog using vsyslog calls
+ *
+ * \param level sets the priority level as defined in vsyslog
+ * \param format format to print optionnaly followed by args
+*/
+void
+xsyslog(int level,char* format,va_list args);
+
+/*!
  * @}
 */
 
