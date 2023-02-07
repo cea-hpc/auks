@@ -11,8 +11,8 @@ Version: %(echo @PACKAGE_VERSION@ | cut -f 1 -d -)
 Release: %(echo @PACKAGE_VERSION@ | cut -f 2- -d - | tr - _)%{?dist}
 License: CeCILL-C License
 Group: System Environment/Base
-URL: http://sourceforge.net/projects/auks/
-Source0: @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
+URL: https://github.com/cea-hpc/auks
+Source0: https://github.com/cea-hpc/auks/archive/refs/tags/@PACKAGE_VERSION@.tar.gz #/@PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 
 
 # For kerberos prior to 1.8, you should define
@@ -73,9 +73,9 @@ for the AUKS API.
 %package slurm
 Summary: Slurm plugins for Auks
 Group: System Environment/Base
-Requires: slurm >= 20.11.0
+Requires: slurm >= 22.05.3
 Requires: auks >= %{version}
-BuildRequires: slurm-devel >= 20.11.0
+BuildRequires: slurm-devel >= 22.05.3
 %description slurm
 Plugins that provides Kerberos Credential Support to Slurm
 %endif
@@ -178,6 +178,8 @@ install -D -m644 src/plugins/slurm/slurm-spank-auks.conf ${RPM_BUILD_ROOT}/etc/s
 %endif
 
 %changelog
+* Tue Feb 07 2023 Romain Fihue <romain.fihue@cea.fr> - 0.5.4-1
+- 0.5.4 Release
 * Tue Jan 11 2022 Matthieu Hautreux <matthieu.hautreux@cea.fr> - 0.5.3-1
 - adapted to auks version 0.5.3
 * Tue Jun 16 2020 Matthieu Hautreux <matthieu.hautreux@cea.fr> - 0.5.0-1
