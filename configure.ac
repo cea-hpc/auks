@@ -43,7 +43,7 @@ AC_ARG_ENABLE(tirpc,
 	[AC_HELP_STRING([--enable-tirpc],
 			[enable use of TI-RPC @<:@default=yes@:>@])],
 	enable_tirpc=$enableval,
-	enable_tirpc='')
+	enable_tirpc='yes')
 AC_LIBTIRPC
 
 dnl Look for krb5 with pkgconfig
