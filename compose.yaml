@@ -1,0 +1,41 @@
+services:
+  auks_server:
+    build: .
+    image: quay.io/cea-hpc/auks
+    domainname: example.com
+    hostname: auks
+    command: bash -xe /usr/local/bin/entrypoint_auksd.sh
+    healthcheck:
+      test: ["CMD", "auks", "-f", "/conf/auks.conf", "-p"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
+    environment:
+      - KRB5_TRACE=/dev/stderr
+    depends_on:
+      kdc:
+        condition: service_healthy
+  kdc:
+    image: quay.io/cea-hpc/krb5-kdc-server-example-com
+    domainname: example.com
+    healthcheck:
+      test: ["CMD", "kadmin.local", "list_principals"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
+  auks_client:
+    build: .
+    image: quay.io/cea-hpc/auks
+    domainname: example.com
+    command: bash -xe /usr/local/bin/entrypoint_auks_client.sh sleep infinity
+    volumes:
+      - type: bind
+        source: ./tests/
+        target: /tests/
+    depends_on:
+      kdc:
+        condition: service_healthy
+      auks_server:
+        condition: service_healthy
