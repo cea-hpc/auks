@@ -134,3 +134,40 @@ function setup() {
     [ "$status" -eq 1 ]
 }
 
+@test "Auks client is able to dump a credential to a local file" {
+    run bash -c "rm /tmp/auks_cred"
+    kinit -k -t /admin.keytab admin
+    auks -f /conf/auks.conf --add
+    auks -f /conf/auks.conf --send --uid 4321 > /tmp/auks_cred
+    test -s /tmp/auks_cred
+    auks -f /conf/auks.conf --remove --uid 4321
+    rm /tmp/auks_cred
+}
+
+@test "Auks client is able to receive a credential from a pipe" {
+    run bash -c "rm /tmp/auks_cred"
+    kinit -k -t /admin.keytab admin
+    run test -e /tmp/auks_cred
+    [ "$status" -eq 1 ]
+    auks -f /conf/auks.conf --add
+    auks -f /conf/auks.conf --send -u 4321 | auks -f /conf/auks.conf --receive -C /tmp/auks_cred
+    auks -f /conf/auks.conf --remove --uid 4321
+    run bash -c "auks -f /conf/auks.conf --dump | grep -w admin@EXAMPLE.COM"
+    [ "$status" -eq 1 ]
+    klist -fnac /tmp/auks_cred
+    rm /tmp/auks_cred
+}
+
+@test "Auks client is able to receive a credential with no krb5 tkt" {
+    run bash -c "rm /tmp/auks_cred"
+    kinit -k -t /admin.keytab admin
+    run test -e /tmp/auks_cred
+    [ "$status" -eq 1 ]
+    auks -f /conf/auks.conf --add
+    auks -f /conf/auks.conf --send -u 4321 > /tmp/auks_msg
+    test -s /tmp/auks_msg
+    auks -f /conf/auks.conf --remove --uid 4321
+    KRB5CCNAME=/dev/null auks -f /conf/auks.conf --receive -C /tmp/auks_cred < /tmp/auks_msg
+    klist -fnac /tmp/auks_cred
+    rm /tmp/auks_msg /tmp/auks_cred
+}
