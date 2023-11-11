@@ -91,6 +91,8 @@
 #define REMOVE_REQUEST  5
 #define DUMP_REQUEST    6
 #define RENEW_REQUEST   7
+#define SEND_REQUEST    8
+#define RECEIVE_REQUEST 9
 
 #define RENEW_MODE_ONCE             1
 #define RENEW_MODE_UNTIL_REMOVAL    2
@@ -148,7 +150,7 @@ main(int argc,char** argv)
 	char* progname;
 	char* optstring="dvhf:H:pagrDC:u:R:";
 	char* short_options_desc="\nUsage : %s [-h|--help] [-d|--debug] [-f conffile|--config configfile] \
-[-C ccache|--ccache ccache] [-p|--ping] [-a|--add] [-g|--get] [-r|--remove [-D|--dump] [-R (once|loop)|--renew (once|loop)] [-u uid|--uid uid] \n\n";
+[-C ccache|--ccache ccache] [-p|--ping] [-a|--add] [-g|--get] [-r|--remove [-D|--dump] [-R (once|loop)|--renew (once|loop)] [-u uid|--uid uid] [--send] [--receive]\n\n";
 	char* addon_options_desc="\
 \t-h --help\t\tshow this message\n\
 \t-d --debug\t\tincrease debug level\n\
@@ -159,6 +161,8 @@ main(int argc,char** argv)
 \t-g --get\t\tget request\n\
 \t-D --dump\t\tdump request\n\
 \t-r --remove\t\tremove request\n\
+\t--send\t\tEncode a credential to stdout\n\
+\t--receive\t\tDecode a credential from stdin\n\
 \t-R --renew mode\t\trenew credential according to specified mode\n\
 \t-C --ccache ccache\tConfiguration file\n\
 \t-u --uid uid\t\tuid of requested cred owner (get request only)\n\n";
@@ -174,11 +178,13 @@ main(int argc,char** argv)
 		{"remove", no_argument, 0, 'r'},
 		{"renew", required_argument, 0, 'R'},
 		{"ccache", required_argument, 0, 'C'},
-		{"uid", required_argument, 0, 'u'}
+		{"uid", required_argument, 0, 'u'},
+		{"send", no_argument, 0, 'x'},
+		{"receive", no_argument, 0, 'X'}
 	};
 	int option_index = 0;
 	int option;
-  
+
 	auks_engine_t engine;
 
 	FILE* logfile=NULL;
@@ -252,6 +258,12 @@ main(int argc,char** argv)
 		case 'u' :
 			requested_uid=(uid_t)atoi(optarg);
 			break;
+		case 'x':
+			action = SEND_REQUEST;
+			break;
+		case 'X':
+			action = RECEIVE_REQUEST;
+			break;
 		case 'h' :
 		default :
 			fprintf(stdout,short_options_desc,progname);
@@ -273,7 +285,7 @@ main(int argc,char** argv)
 		goto exit;
 	}
 
-	if ( verbose_level > 0 )
+	if ( verbose_level > 0 && action != SEND_REQUEST )
 		auks_api_set_logfile(&engine,"/dev/stdout");
 	else if ( action == RENEW_REQUEST ) {
 		if((strlen(engine.renewer_logfile) > 0) &&
@@ -300,18 +312,18 @@ main(int argc,char** argv)
 	}
 	
 	switch(action){
-		
+
 	case ADD_REQUEST :
 		fstatus = auks_api_add_cred(&engine,
 					    ccache);
 		break;
-		
+
 	case GET_REQUEST :
 		fstatus = auks_api_get_cred(&engine,
 					    requested_uid,
 					    ccache);
 		break;
-		
+
 	case DUMP_REQUEST :
 		fstatus = auks_api_dump(&engine,&creds,&creds_nb);
 		if ( fstatus == AUKS_SUCCESS )
@@ -322,11 +334,21 @@ main(int argc,char** argv)
 		fstatus = auks_api_remove_cred(&engine,
 					       requested_uid);
 		break;
-		
+
 	case RENEW_REQUEST :
 
 		fstatus = auks_api_renew_cred(&engine,ccache,renew_mode);
 
+		break;
+
+	case SEND_REQUEST :
+		fstatus = auks_api_send_cred(&engine,
+					    requested_uid,
+						format);
+		break;
+
+	case RECEIVE_REQUEST :
+		fstatus = auks_api_receive_cred(&engine, ccache);
 		break;
 
 	case PING_REQUEST :

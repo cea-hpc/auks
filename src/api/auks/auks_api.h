@@ -289,6 +289,33 @@ int
 auks_api_dump_unpack(auks_message_t* msg,auks_cred_t** pcreds,int* pcreds_nb);
 
 /*!
+ * \brief Dump a credential from one of the Auks server to a given format
+ *
+ * \param engine pointer on the engine structure to use
+ * \param uid associated uid of the credential to get from Auks
+ * \param format format to use
+ *
+ * \retval AUKS_SUCCESS
+ * \retval AUKS_ERROR
+ * \retval AUKS_ERROR_...
+ */
+int
+auks_api_send_cred(auks_engine_t * engine,uid_t uid, int format);
+
+/*!
+ * \brief Receive a credential from a previous 'send' command
+ *
+ * \param engine pointer on the engine structure to use
+ * \param cred_cache optional file containing cred cache to add
+ * \param format format to use
+ *
+ * \retval AUKS_SUCCESS
+ * \retval AUKS_ERROR
+ * \retval AUKS_ERROR_...
+ */
+int
+auks_api_receive_cred(auks_engine_t * engine,char* cred_cache, int format);
+/*!
  * @}
 */
 #endif

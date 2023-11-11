@@ -862,3 +862,11 @@ req_exit:
 exit:  
 	return fstatus;
 }
+
+int auks_api_send_cred(auks_engine_t * engine,uid_t uid, int format) {
+	return AUKS_ERROR_DAEMON_UNKNOWN_REQUEST;
+}
+
+int auks_api_receive_cred(auks_engine_t * engine,char* cred_cache, int format) {
+	return AUKS_ERROR_DAEMON_UNKNOWN_REQUEST;
+}
