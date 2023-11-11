@@ -4,7 +4,7 @@
 auks \- client program to manage AUKS credentials
 
 .SH "SYNOPSIS"
-\fBauks\fR [\fI-h\fR] [\fI-dv\fR] [\fI-f auks.conf\fR] [\fI-p|a|g|r|D\fR] [\fI-R once|loop\fR] [\fI-u uid\fR] [\fI-C ccache\fR]
+\fBauks\fR [\fI-h|--help\fR] [\fI-d|--debug\fR] [\fI-v|--verbose\fR] [\fI-f auks.conf|--config auks.conf\fR] [\fI-p|--ping\fR] [\fI-a|--add\fR] [\fI-g|--get\fR] [\fI-r|--remove\fR] [\fI-D|--dump\fR] [\fI-R (once|loop)|--renew (once|loop)\fR] [\fI-u uid|--uid uid\fR] [\fI-C ccache|--ccache\fR]
 
 .SH "DESCRIPTION"
 .LP
@@ -16,53 +16,53 @@ credentials or dump all the available credentials.
 .LP
 
 .TP
-\fB\-h\fR
+\fB\-h, --help\fR
 print this message
 
 .TP
-\fB\-v\fR
+\fB\-v, --verbose\fR
 increase verbosity output
 
 .TP
-\fB\-d\fR
+\fB\-d, --debug\fR
 increase debug output
 
 .TP
-\fB\-f auks.conf\fR
+\fB\-f auks.conf, --config auks.conf\fR
 use \fIauks.conf\fR as the configuration file.
 The default is \fB/etc/auks/auks.conf\fR.
 
 .TP
-\fB\-p\fR
+\fB\-p, --ping\fR
 do a simple ping request on the first responding AUKS daemon (default).
 This operation requires at least to have a valid kerberos credential
 to connect to the AUKS daemon
 
 .TP
-\fB\-a\fR
+\fB\-a, --add\fR
 add client kerberos credential to the first responding AUKS daemon. If 
 client kerberos credential is not an addressless kerberos TGT, an
 addressless cred is gotten and then transmitted in place of the given one.
 This operation requires at least the \fBguest\fR privilege.
 
 .TP
-\fB\-g\fR
+\fB\-g, --get\fR
 get AUKS kerberos credential of the requested uid using the first responding 
 AUKS daemon and stores it into the requested credential cache. This operation 
 requires at least the \fBuser\fR privilege.
 
 .TP
-\fB\-r\fR
+\fB\-r, --remove\fR
 remove AUKS kerberos credential of the requested uid using the first responding 
 AUKS daemon. This operation requires at least the \fBuser\fR privilege.
 
 .TP
-\fB\-D\fR
+\fB\-D, --dump\fR
 dump all the AUKS kerberos credentials using the first responding AUKS daemon.
 This operation requires at least the \fBadmin\fR privilege.
 
 .TP
-\fB\-R once|loop\fR
+\fB\-R (once|loop), --renew (once|loop)\fR
 use AUKS commandline client as a credential renewer process. In \fBloop\fR mode,
 the process exits only when an error occured or the credential can no longer 
 be renewed. Used renewal mechanism is to first try to renew credential using 
@@ -71,11 +71,11 @@ failure. In \fBonce\fR mode, the ticket is renewed once, only if needed, and
 the program exits. This operation requires at least the \fBuser\fR privilege.
 
 .TP
-\fB\-u uid\fR
+\fB\-u uid, --uid uid\fR
 specify the requested uid to use with get/remove requests
 
 .TP
-\fB\-C ccache\fR
+\fB\-C ccache, --ccache ccache\fR
 specify the input/output credential file to use with add/get requests
 
 

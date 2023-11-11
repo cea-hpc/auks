@@ -75,6 +75,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <getopt.h>
 
 #include <string.h>
 
@@ -146,23 +147,37 @@ main(int argc,char** argv)
 	/* options processing variables */
 	char* progname;
 	char* optstring="dvhf:H:pagrDC:u:R:";
-	char* short_options_desc="\nUsage : %s [-h] [-dv] [-f conffile] \
-[-C ccache] [-p|a|g|r|D] [-R once|loop] [-u uid] \n\n";
+	char* short_options_desc="\nUsage : %s [-h|--help] [-d|--debug] [-f conffile|--config configfile] \
+[-C ccache|--ccache ccache] [-p|--ping] [-a|--add] [-g|--get] [-r|--remove [-D|--dump] [-R (once|loop)|--renew (once|loop)] [-u uid|--uid uid] \n\n";
 	char* addon_options_desc="\
-\t-h\t\tshow this message\n\
-\t-d\t\tincrease debug level\n\
-\t-v\t\tincrease verbose level\n\
-\t-f conffile\tConfiguration file\n\
-\t-p\t\tping request (default)\n\
-\t-a\t\tadd request\n\
-\t-g\t\tget request\n\
-\t-D\t\tdump request\n\
-\t-r\t\tremove request\n\
-\t-R mode\t\trenew credential according to specified mode\n\
-\t-C ccache\tConfiguration file\n\
-\t-u uid\t\tuid of requested cred owner (get request only)\n\n";
-
-	int  option;
+\t-h --help\t\tshow this message\n\
+\t-d --debug\t\tincrease debug level\n\
+\t-v --verbose\t\tincrease verbose level\n\
+\t-f --config conffile\tConfiguration file\n\
+\t-p --ping\t\tping request (default)\n\
+\t-a --add\t\tadd request\n\
+\t-g --get\t\tget request\n\
+\t-D --dump\t\tdump request\n\
+\t-r --remove\t\tremove request\n\
+\t-R --renew mode\t\trenew credential according to specified mode\n\
+\t-C --ccache ccache\tConfiguration file\n\
+\t-u --uid uid\t\tuid of requested cred owner (get request only)\n\n";
+	static struct option long_options[] = {
+		{"help", no_argument, 0, 'h'},
+		{"debug", no_argument, 0, 'd'},
+		{"verbose", no_argument, 0, 'v'},
+		{"config", required_argument, 0, 'f'},
+		{"ping", no_argument, 0, 'p'},
+		{"add", no_argument, 0, 'a'},
+		{"get", no_argument, 0, 'g'},
+		{"dump", no_argument, 0, 'D'},
+		{"remove", no_argument, 0, 'r'},
+		{"renew", required_argument, 0, 'R'},
+		{"ccache", required_argument, 0, 'C'},
+		{"uid", required_argument, 0, 'u'}
+	};
+	int option_index = 0;
+	int option;
   
 	auks_engine_t engine;
 
@@ -187,7 +202,7 @@ main(int argc,char** argv)
 	conf_file_string=NULL;
 
 	/* process options */
-	while((option = getopt(argc,argv,optstring)) != -1)
+	while((option = getopt_long(argc,argv,optstring, long_options, &option_index)) != -1)
 	{
 		switch(option)
 		{
