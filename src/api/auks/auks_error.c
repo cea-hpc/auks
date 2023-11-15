@@ -106,6 +106,9 @@ auks_strerror(int error)
 	case AUKS_ERROR_LIBRARY_UID_TO_STR :
 		return "auks library : " "cred uid to uid_str failure" ;
 		break ;
+	case AUKS_ERROR_LIBRARY_IS_TTY :
+		return "auks library : " "output is a tty" ;
+		break ;
 
 	/* -- BUFFER */
 	case AUKS_ERROR_BUFFER_MALLOC :

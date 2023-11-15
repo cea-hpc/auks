@@ -87,6 +87,7 @@
 #include "auks/auks_buffer.h"
 #include "auks/auks_message.h"
 #include "auks/auks_cred.h"
+#include "auks/auks_krb5_cred.h"
 #include "auks/auks_engine.h"
 #include "auks/auks_krb5_stream.h"
 
@@ -863,10 +864,48 @@ exit:
 	return fstatus;
 }
 
-int auks_api_send_cred(auks_engine_t * engine,uid_t uid, int format) {
-	return AUKS_ERROR_DAEMON_UNKNOWN_REQUEST;
+int auks_api_send_cred(auks_engine_t * engine,uid_t uid) {
+
+	int fstatus;
+
+	auks_cred_t cred;
+
+	// Get credential as usual with a GET request
+	fstatus = auks_api_get_auks_cred(engine,uid,&cred);
+	if( fstatus ) {
+		auks_log2("unable to unpack auks cred from reply : %s",
+			  auks_strerror(fstatus));
+		fstatus = AUKS_ERROR_API_CORRUPTED_REPLY ;
+		goto exit;
+	}
+
+	// But instead of storing it, encode it as a ascii blob
+	fstatus = auks_cred_encode(&cred);
+
+	auks_cred_free_contents(&cred);
+
+exit:
+	return fstatus;
 }
 
-int auks_api_receive_cred(auks_engine_t * engine,char* cred_cache, int format) {
-	return AUKS_ERROR_DAEMON_UNKNOWN_REQUEST;
+int auks_api_receive_cred(auks_engine_t * engine, char* cred_cache) {
+	int fstatus = AUKS_SUCCESS;
+
+    /* Initialize the credential for future storage */
+	char *credential_data = malloc(sizeof(char) * AUKS_CRED_DATA_MAX_LENGTH);
+    size_t credential_length = 0;
+
+    fstatus = auks_cred_decode(credential_data, &credential_length);
+	if (fstatus != AUKS_SUCCESS) {
+    	auks_error("Unable to decode credential from stdin");
+        goto out;
+    }
+
+	auks_debug3("Received cred of lenght %d", credential_length);
+
+    fstatus = auks_krb5_cred_store(cred_cache, credential_data, credential_length);
+
+out:
+    free(credential_data);
+	return fstatus;
 }

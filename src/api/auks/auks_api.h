@@ -300,21 +300,20 @@ auks_api_dump_unpack(auks_message_t* msg,auks_cred_t** pcreds,int* pcreds_nb);
  * \retval AUKS_ERROR_...
  */
 int
-auks_api_send_cred(auks_engine_t * engine,uid_t uid, int format);
+auks_api_send_cred(auks_engine_t * engine,uid_t uid);
 
 /*!
  * \brief Receive a credential from a previous 'send' command
  *
  * \param engine pointer on the engine structure to use
  * \param cred_cache optional file containing cred cache to add
- * \param format format to use
  *
  * \retval AUKS_SUCCESS
  * \retval AUKS_ERROR
  * \retval AUKS_ERROR_...
  */
 int
-auks_api_receive_cred(auks_engine_t * engine,char* cred_cache, int format);
+auks_api_receive_cred(auks_engine_t * engine,char* cred_cache);
 /*!
  * @}
 */

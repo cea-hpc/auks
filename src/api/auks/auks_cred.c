@@ -84,6 +84,10 @@
 /* kerberos stuff */
 #include "krb5.h"
 
+/* errno */
+#include <errno.h>
+extern int errno;
+
 #define AUKS_LOG_HEADER "auks_cred: "
 #define AUKS_LOG_BASE_LEVEL 4
 
@@ -564,4 +568,76 @@ int auks_cred_unpack(auks_cred_t* cred,auks_message_t * msg)
 	fstatus = auks_message_unpack_int(msg,&(cred->status));
 	
 	return fstatus;
+}
+
+int auks_cred_encode(auks_cred_t* credential) {
+	int fstatus = AUKS_SUCCESS;
+	errno = 0;
+
+	/* String is made of the cred length (ulong) and the cred itself
+	   so the maximum size is 10 chars + the length of the credential 
+	   + the  newline and NULL byte
+	*/
+
+	/* Send a fixed size 10 ulong + 1 newline to stdout */
+	char *cred_length_str = malloc(sizeof(char) * 11);
+	sprintf(cred_length_str, "%010lu", credential->length);
+	
+	ssize_t nwr = puts(cred_length_str);
+	if (nwr < 0) {
+		auks_error("Failed to write credential length on stdout: %d %s", errno, strerror(errno));
+		fstatus = AUKS_ERROR;
+		goto out;
+	}
+
+	nwr = fwrite(credential->data, 1, credential->length, stdout);
+	if (nwr < credential->length) {
+		auks_error("Failed to write credential length on stdout: %d", nwr);
+		fstatus = AUKS_ERROR;
+		goto out;
+	}
+
+out:
+	free(cred_length_str);
+
+	return fstatus;
+}
+
+int auks_cred_decode(char* credential_data, size_t* credential_length) {
+	int fstatus = AUKS_SUCCESS;
+
+	char *cred_length_str = malloc(sizeof(char) * 11);
+	char *endptr;
+
+	void * s = gets(cred_length_str);
+	auks_debug3("Got credential length from stdin: %s", cred_length_str);
+
+	if (s == NULL) {
+		auks_error("Failed to read credential length from stdin");
+		fstatus = AUKS_ERROR;
+		goto out;
+	}
+	
+	errno = 0;
+	*credential_length = (size_t) strtoul(cred_length_str, &endptr, 10);
+	if (errno != 0) {
+		auks_error("Failed to read credential length from stdin");
+        return AUKS_ERROR_API_CORRUPTED_REPLY;
+	}
+
+	auks_debug3("Credential length parsed as: %lu", *credential_length);
+
+	/* Read /length/ bytes from stdin */
+	size_t nrd = fread(credential_data, 1, *credential_length, stdin);
+	if (nrd != *credential_length) {
+		auks_error("Failed to read credential from stdin, read %lu bytes wants %lu", nrd, *credential_length);
+		fstatus = AUKS_ERROR_API_CORRUPTED_REPLY;
+		goto out;
+	}
+	auks_debug3("Got %lu bytes of credential data from stdin", nrd);
+
+out:
+	free(cred_length_str);
+	return fstatus;
+
 }

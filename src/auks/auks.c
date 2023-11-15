@@ -342,9 +342,7 @@ main(int argc,char** argv)
 		break;
 
 	case SEND_REQUEST :
-		fstatus = auks_api_send_cred(&engine,
-					    requested_uid,
-						format);
+		fstatus = auks_api_send_cred(&engine, requested_uid);
 		break;
 
 	case RECEIVE_REQUEST :
@@ -362,7 +360,8 @@ main(int argc,char** argv)
 		fprintf(stderr,"Auks API request failed : %s\n",
 			auks_strerror(fstatus));
 	}
-	else {
+	else if (action != SEND_REQUEST)
+	{
 		fprintf(stdout,"Auks API request succeed\n");
 	}
 
