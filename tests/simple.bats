@@ -4,15 +4,26 @@ function setup() {
     if ! $KADMIN list_principals | grep -w '^user@EXAMPLE.COM$'; then
         $KADMIN add_principal -randkey user
     fi
-    if ! $KADMIN list_principals | grep -e '^admin@EXAMPLE.COM$'; then
+    if ! $KADMIN list_principals | grep -w '^admin@EXAMPLE.COM$'; then
         $KADMIN add_principal -randkey admin
     fi
-    test -e /user.keytab && rm /user.keytab
-    test -e /admin.keytab && rm /admin.keytab
     $KADMIN ktadd -k /user.keytab user
     $KADMIN ktadd -k /admin.keytab admin
-    test -e /config/auks.conf.orig && mv /config/auks.conf.orig /config/auks.conf
-    true
+}
+
+function teardown() {
+    test -e /conf/auks.conf.orig && mv /conf/auks.conf.orig /conf/auks.conf
+    # Flush everything from auks
+    kinit -k -t /user.keytab admin
+    auks -f /conf/auks.conf --remove --uid 4321 &>/dev/null;
+    auks -f /conf/auks.conf --remove --uid 1234 &>/dev/null;
+    $KADMIN delete_principal -force user
+    $KADMIN delete_principal -force admin
+    rm /user.keytab /admin.keytab || true
+    test -e /tmp/renewed && rm /tmp/renewed
+    kdestroy || true
+    # Re-set for debug
+    setup
 }
 
 @test "Ping as host" {
@@ -34,6 +45,9 @@ function setup() {
     [ "$status" -ne 0 ]
     auks -f /conf/auks.conf -a
     auks -f /conf/auks.conf -g -u 1234
+    sleep 1
+    auks -f /conf/auks.conf -R once
+    test -e /tmp/renewed; rm /tmp/renewed
     auks -f /conf/auks.conf -r -u 1234
     run auks -f /conf/auks.conf -g -u 1234
     [ "$status" -ne 0 ]
@@ -46,6 +60,9 @@ function setup() {
     [ "$status" -ne 0 ]
     auks --config /conf/auks.conf --add
     auks --config /conf/auks.conf --get --uid 1234
+    sleep 1
+    auks -f /conf/auks.conf --renew once
+    test -e /tmp/renewed; rm /tmp/renewed
     auks --config /conf/auks.conf --remove --uid 1234
     run auks --config /conf/auks.conf --get --uid 1234
     [ "$status" -ne 0 ]
@@ -178,4 +195,53 @@ function setup() {
     sed -i.orig 's/CrossRealm.*;$/CrossRealm = \"CROSS.EXAMPLE.COM\";/' /conf/auks.conf
     auks -f /conf/auks.conf --add
     mv /conf/auks.conf.orig /conf/auks.conf
+}
+
+@test "Fail when renewal script fails" {
+    kinit -k -t /user.keytab user
+    auks --config /conf/auks.conf --ping
+    sed -i.orig 's/HelperScript.*/HelperScript=\"\/bin\/false\";/' /conf/auks.conf
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+    auks --config /conf/auks.conf --add
+    auks --config /conf/auks.conf --get --uid 1234
+    sleep 1
+    run auks -f /conf/auks.conf --renew once -vvv -ddd
+    [ "$status" -ne 0 ]
+    test -e /tmp/renewed && rm /tmp/renewed
+    auks --config /conf/auks.conf --remove --uid 1234
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+}
+
+@test "Not fail when renewal script is not executable" {
+    kinit -k -t /user.keytab user
+    auks --config /conf/auks.conf --ping
+    sed -i.orig 's/HelperScript.*/HelperScript=\"\/not\/existing\/script\";/' /conf/auks.conf
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+    auks --config /conf/auks.conf --add
+    auks --config /conf/auks.conf --get --uid 1234
+    sleep 1
+    auks -f /conf/auks.conf --renew once -vvv -ddd
+    test -e /tmp/renewed && rm /tmp/renewed
+    auks --config /conf/auks.conf --remove --uid 1234
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+}
+
+@test "Not fail when renewal script is not set" {
+    kinit -k -t /user.keytab user
+    auks --config /conf/auks.conf --ping
+    sed -i.orig 's/HelperScript.*/HelperScript=\"\";/' /conf/auks.conf
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+    auks --config /conf/auks.conf --add
+    auks --config /conf/auks.conf --get --uid 1234
+    sleep 1
+    auks -f /conf/auks.conf --renew once -vvv -ddd
+    test -e /tmp/renewed && rm /tmp/renewed
+    auks --config /conf/auks.conf --remove --uid 1234
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
 }

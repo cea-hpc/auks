@@ -52,6 +52,9 @@ api {
  DebugFile          = 	"/tmp/auksapi.log" ;
  DebugLevel         = 	"0" ;
 
+ # Helper Script
+ HelperScript = "";
+ 
 }
 
 #-
