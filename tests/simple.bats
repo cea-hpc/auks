@@ -11,7 +11,8 @@ function setup() {
     test -e /admin.keytab && rm /admin.keytab
     $KADMIN ktadd -k /user.keytab user
     $KADMIN ktadd -k /admin.keytab admin
-
+    test -e /config/auks.conf.orig && mv /config/auks.conf.orig /config/auks.conf
+    true
 }
 
 @test "Ping as host" {
@@ -170,4 +171,11 @@ function setup() {
     KRB5CCNAME=/dev/null auks -f /conf/auks.conf --receive -C /tmp/auks_cred < /tmp/auks_msg
     klist -fnac /tmp/auks_cred
     rm /tmp/auks_msg /tmp/auks_cred
+}
+
+@test "Auks does not fail when a cross-realm is not available" {
+    kinit -k -t /admin.keytab admin
+    sed -i.orig 's/CrossRealm.*;$/CrossRealm = \"CROSS.EXAMPLE.COM\";/' /conf/auks.conf
+    auks -f /conf/auks.conf --add
+    mv /conf/auks.conf.orig /conf/auks.conf
 }
