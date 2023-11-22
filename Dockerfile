@@ -2,7 +2,7 @@ FROM quay.io/centos/centos:stream8
 
 RUN yum -y update; yum install -y autoconf automake libtool\
         libtirpc libtirpc-devel krb5-devel krb5-workstation\
-        make gcc diffutils file
+        make gcc diffutils file strace gdb
 
 RUN dnf config-manager --set-enabled powertools; dnf install -y epel-release
 RUN dnf install -y bats
