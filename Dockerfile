@@ -15,7 +15,7 @@ RUN autoreconf -fvi && ./configure && make clean && make && make install
 
 COPY fixtures/krb5.conf /etc/krb5.conf
 COPY fixtures/auks* /conf/
-
+COPY fixtures/renewer_script.sh /usr/local/bin/renewer_script.sh
 COPY fixtures/entrypoint_*.sh /usr/local/bin
 RUN chmod 0750 /usr/local/bin/entrypoint_*.sh
 

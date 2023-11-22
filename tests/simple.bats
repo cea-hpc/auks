@@ -4,15 +4,25 @@ function setup() {
     if ! $KADMIN list_principals | grep -w '^user@EXAMPLE.COM$'; then
         $KADMIN add_principal -randkey user
     fi
-    if ! $KADMIN list_principals | grep -e '^admin@EXAMPLE.COM$'; then
+    if ! $KADMIN list_principals | grep -w '^admin@EXAMPLE.COM$'; then
         $KADMIN add_principal -randkey admin
     fi
-    test -e /user.keytab && rm /user.keytab
-    test -e /admin.keytab && rm /admin.keytab
     $KADMIN ktadd -k /user.keytab user
     $KADMIN ktadd -k /admin.keytab admin
-    test -e /config/auks.conf.orig && mv /config/auks.conf.orig /config/auks.conf
-    true
+}
+
+function teardown() {
+    # Flush everything from auks
+    kinit -k -t /user.keytab admin
+    auks -f /conf/auks.conf --remove --uid 4321 &>/dev/null;
+    auks -f /conf/auks.conf --remove --uid 1234 &>/dev/null;
+    $KADMIN delete_principal -force user
+    $KADMIN delete_principal -force admin
+    rm /user.keytab /admin.keytab || true
+    rm /tmp/renewed || true
+    kdestroy || true
+    # Re-set for debug
+    setup
 }
 
 @test "Ping as host" {
@@ -34,6 +44,9 @@ function setup() {
     [ "$status" -ne 0 ]
     auks -f /conf/auks.conf -a
     auks -f /conf/auks.conf -g -u 1234
+    sleep 1
+    auks -f /conf/auks.conf -R once
+    test -e /tmp/renewed; rm /tmp/renewed
     auks -f /conf/auks.conf -r -u 1234
     run auks -f /conf/auks.conf -g -u 1234
     [ "$status" -ne 0 ]
@@ -46,6 +59,9 @@ function setup() {
     [ "$status" -ne 0 ]
     auks --config /conf/auks.conf --add
     auks --config /conf/auks.conf --get --uid 1234
+    sleep 1
+    auks -f /conf/auks.conf --renew once
+    test -e /tmp/renewed; rm /tmp/renewed
     auks --config /conf/auks.conf --remove --uid 1234
     run auks --config /conf/auks.conf --get --uid 1234
     [ "$status" -ne 0 ]
@@ -172,6 +188,7 @@ function setup() {
     klist -fnac /tmp/auks_cred
     rm /tmp/auks_msg /tmp/auks_cred
 }
+<<<<<<< HEAD
 
 @test "Auks does not fail when a cross-realm is not available" {
     kinit -k -t /admin.keytab admin
@@ -179,3 +196,5 @@ function setup() {
     auks -f /conf/auks.conf --add
     mv /conf/auks.conf.orig /conf/auks.conf
 }
+=======
+>>>>>>> 5f368f2 (tests: Add renewal tests)
