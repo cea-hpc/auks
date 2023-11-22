@@ -255,19 +255,18 @@ auks_cred_unpack(auks_cred_t* cred,auks_message_t * msg);
  * \retval AUKS_ERROR
  * \retval AUKS_ERROR_...
  */
-int auks_cred_encode(auks_cred_t* credential);
+int auks_cred_print(auks_cred_t* credential);
 
 /*!
  * \brief Encode an auks credential with the given format
  *
  * \param credential pointer on the auks credential structure to write to ccache
- * \param credential_length pointer to the credential length 
  *
  * \retval AUKS_SUCCESS
  * \retval AUKS_ERROR
  * \retval AUKS_ERROR_...
  */
-int auks_cred_decode(char* credential, size_t* credential_length);
+int auks_cred_parse(auks_cred_t* credential);
 
 /*!
  * @}

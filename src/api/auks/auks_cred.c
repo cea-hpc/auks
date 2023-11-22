@@ -570,74 +570,75 @@ int auks_cred_unpack(auks_cred_t* cred,auks_message_t * msg)
 	return fstatus;
 }
 
-int auks_cred_encode(auks_cred_t* credential) {
+int auks_cred_print(auks_cred_t* credential) {
 	int fstatus = AUKS_SUCCESS;
 	errno = 0;
 
-	/* String is made of the cred length (ulong) and the cred itself
-	   so the maximum size is 10 chars + the length of the credential 
-	   + the  newline and NULL byte
-	*/
+	auks_message_t msg;
 
-	/* Send a fixed size 10 ulong + 1 newline to stdout */
-	char *cred_length_str = malloc(sizeof(char) * 11);
-	sprintf(cred_length_str, "%010lu", credential->length);
-	
-	ssize_t nwr = puts(cred_length_str);
-	if (nwr < 0) {
-		auks_error("Failed to write credential length on stdout: %d %s", errno, strerror(errno));
-		fstatus = AUKS_ERROR;
-		goto out;
+	/* Initialize message */
+	fstatus = auks_message_init(&msg, AUKS_CRED_DUMP_REQUEST, NULL, 0);
+	if (fstatus != AUKS_SUCCESS)
+		return fstatus;
+
+	/* Pack credential into message */
+	fstatus = auks_cred_pack(credential, &msg);
+	if (fstatus != AUKS_SUCCESS)
+		return fstatus;
+
+	/* Send message size on the wire */
+	size_t msg_size = auks_message_packed(&msg);
+	size_t nwr = fwrite(&msg_size, 1, sizeof(size_t), stdout);
+	if (nwr < sizeof(size_t)) {
+		auks_error("Failed to write message size on stdout, wrote %lu bytes instead of %lu", nwr, sizeof(size_t));
+		return AUKS_ERROR;
 	}
 
-	nwr = fwrite(credential->data, 1, credential->length, stdout);
-	if (nwr < credential->length) {
-		auks_error("Failed to write credential length on stdout: %d", nwr);
+	nwr = fwrite(auks_message_data(&msg), 1, auks_message_packed(&msg), stdout);
+	if (nwr < sizeof(auks_message_t)) {
+		auks_error("Failed to write credential on stdout, wrote %lu bytes instead of %lu", nwr, sizeof(auks_message_t));
 		fstatus = AUKS_ERROR;
-		goto out;
 	}
-
-out:
-	free(cred_length_str);
 
 	return fstatus;
 }
 
-int auks_cred_decode(char* credential_data, size_t* credential_length) {
+int auks_cred_parse(auks_cred_t* credential) {
 	int fstatus = AUKS_SUCCESS;
+	size_t msg_size = 0;
+	auks_message_t msg;
 
-	char *cred_length_str = malloc(sizeof(char) * 11);
-	char *endptr;
+	/* Read the auks message size from stdin */
+	size_t nrd = fread(&msg_size, 1, sizeof(size_t), stdin);
+	if (nrd < sizeof(size_t))
+		return AUKS_ERROR;
 
-	void * s = gets(cred_length_str);
-	auks_debug3("Got credential length from stdin: %s", cred_length_str);
+	auks_debug3("Message size is %lu", msg_size);
 
-	if (s == NULL) {
-		auks_error("Failed to read credential length from stdin");
-		fstatus = AUKS_ERROR;
-		goto out;
-	}
-	
-	errno = 0;
-	*credential_length = (size_t) strtoul(cred_length_str, &endptr, 10);
-	if (errno != 0) {
-		auks_error("Failed to read credential length from stdin");
-        return AUKS_ERROR_API_CORRUPTED_REPLY;
-	}
+	char* rcv_buffer = malloc(sizeof(char) * msg_size);
 
-	auks_debug3("Credential length parsed as: %lu", *credential_length);
-
-	/* Read /length/ bytes from stdin */
-	size_t nrd = fread(credential_data, 1, *credential_length, stdin);
-	if (nrd != *credential_length) {
-		auks_error("Failed to read credential from stdin, read %lu bytes wants %lu", nrd, *credential_length);
+	/* Read the auks message from stdin */
+	nrd = fread(rcv_buffer, 1, msg_size, stdin);
+	if (nrd != msg_size) {
+		auks_error("Failed to read credential from stdin, read %lu bytes wants %lu", nrd, sizeof(auks_message_t));
 		fstatus = AUKS_ERROR_API_CORRUPTED_REPLY;
 		goto out;
 	}
-	auks_debug3("Got %lu bytes of credential data from stdin", nrd);
+	auks_debug3("Got a %lu bytes message from stdin", nrd);
+
+	fstatus = auks_message_load(&msg, rcv_buffer, msg_size);
+	if (fstatus != AUKS_SUCCESS) {
+		auks_error("Unable to load message: %s", auks_strerror(fstatus));
+		return fstatus;
+	}
+
+	fstatus = auks_cred_unpack(credential, &msg);
+	if (fstatus != AUKS_SUCCESS) {
+		auks_error("Unable to load message: %s", auks_strerror(fstatus));
+		return fstatus;
+	}
 
 out:
-	free(cred_length_str);
 	return fstatus;
 
 }

@@ -880,7 +880,7 @@ int auks_api_send_cred(auks_engine_t * engine,uid_t uid) {
 	}
 
 	// But instead of storing it, encode it as a ascii blob
-	fstatus = auks_cred_encode(&cred);
+	fstatus = auks_cred_print(&cred);
 
 	auks_cred_free_contents(&cred);
 
@@ -891,21 +891,21 @@ exit:
 int auks_api_receive_cred(auks_engine_t * engine, char* cred_cache) {
 	int fstatus = AUKS_SUCCESS;
 
-    /* Initialize the credential for future storage */
-	char *credential_data = malloc(sizeof(char) * AUKS_CRED_DATA_MAX_LENGTH);
-    size_t credential_length = 0;
+	auks_cred_t cred;
 
-    fstatus = auks_cred_decode(credential_data, &credential_length);
+    fstatus = auks_cred_parse(&cred);
 	if (fstatus != AUKS_SUCCESS) {
     	auks_error("Unable to decode credential from stdin");
         goto out;
     }
 
-	auks_debug3("Received cred of lenght %d", credential_length);
+	auks_debug3("Received cred of lenght %d", cred.length);
 
-    fstatus = auks_krb5_cred_store(cred_cache, credential_data, credential_length);
+	auks_log("Received the following credential for local storage");
+	auks_cred_log(&cred);
+
+    fstatus = auks_krb5_cred_store(cred_cache, cred.data, cred.length);
 
 out:
-    free(credential_data);
 	return fstatus;
 }
