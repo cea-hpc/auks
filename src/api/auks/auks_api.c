@@ -702,6 +702,7 @@ exit:
 int auks_api_run_helper(char *helper_script, char *auks_credcache, uid_t uid, gid_t gid)
 {
 	int helper_pid;
+	int helper_pid_status;
 
 	if (helper_script == NULL) {
 		auks_log3("No helper script provided");
@@ -741,11 +742,21 @@ int auks_api_run_helper(char *helper_script, char *auks_credcache, uid_t uid, gi
 		execv(argv[0], argv);
 helper_fail:
 		auks_log2("unable to exec helper (%s)", argv[0]);
-		exit(0);
+		exit(127);
 	}
 	else {
 		auks_log3("helper renewer launched (pid=%u)", helper_pid);
-		waitpid(helper_pid, NULL, 0);
+		if (waitpid(helper_pid, &helper_pid_status, 0) == -1){
+			auks_error("Helper process waitpid() failed");
+			return AUKS_ERROR;
+		};
+		if (WIFEXITED(helper_pid_status)) {
+			int ret_code = WEXITSTATUS(helper_pid_status);
+			if (ret_code != 0) {
+				auks_error("Helper process exited with code %d", WEXITSTATUS(helper_pid_status));
+				return AUKS_ERROR;
+			}
+		}
 		auks_log3("helper renewer exited (pid=%u)", helper_pid);
 	}
 
@@ -824,7 +835,7 @@ auks_api_renew_cred(auks_engine_t * engine,char* cred_cache,int mode)
 			fstatus = AUKS_SUCCESS;
 		}
 
-		auks_api_run_helper(engine->helper_script, cred_cache, uid, gid);
+		fstatus = auks_api_run_helper(engine->helper_script, cred_cache, uid, gid);
 	sleep:
 		if ( loop == 1 )
 			sleep(engine->renewer_delay);

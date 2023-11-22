@@ -622,8 +622,12 @@ auks_engine_init_from_config_file(auks_engine_t * engine, char *conf_file)
 
 		/* read helper script value */
 		helper_script = config_GetKeyValueByName(config, i, "HelperScript");
-		if (helper_script == NULL)
+		if (helper_script == NULL || strlen(helper_script) == 0) {
 			helper_script = DEFAULT_AUKS_HELPER_SCRIPT;
+		} else if (access(helper_script, X_OK) != 0) {
+			auks_log("%s helper script is not executable, setting NULL instead", helper_script);
+			helper_script = DEFAULT_AUKS_HELPER_SCRIPT;
+		}
 
 		valid_block_nb++;
 

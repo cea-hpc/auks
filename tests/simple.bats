@@ -12,6 +12,7 @@ function setup() {
 }
 
 function teardown() {
+    test -e /conf/auks.conf.orig && mv /conf/auks.conf.orig /conf/auks.conf
     # Flush everything from auks
     kinit -k -t /user.keytab admin
     auks -f /conf/auks.conf --remove --uid 4321 &>/dev/null;
@@ -19,7 +20,7 @@ function teardown() {
     $KADMIN delete_principal -force user
     $KADMIN delete_principal -force admin
     rm /user.keytab /admin.keytab || true
-    rm /tmp/renewed || true
+    test -e /tmp/renewed && rm /tmp/renewed
     kdestroy || true
     # Re-set for debug
     setup
@@ -188,7 +189,6 @@ function teardown() {
     klist -fnac /tmp/auks_cred
     rm /tmp/auks_msg /tmp/auks_cred
 }
-<<<<<<< HEAD
 
 @test "Auks does not fail when a cross-realm is not available" {
     kinit -k -t /admin.keytab admin
@@ -196,5 +196,52 @@ function teardown() {
     auks -f /conf/auks.conf --add
     mv /conf/auks.conf.orig /conf/auks.conf
 }
-=======
->>>>>>> 5f368f2 (tests: Add renewal tests)
+
+@test "Fail when renewal script fails" {
+    kinit -k -t /user.keytab user
+    auks --config /conf/auks.conf --ping
+    sed -i.orig 's/HelperScript.*/HelperScript=\"\/bin\/false\";/' /conf/auks.conf
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+    auks --config /conf/auks.conf --add
+    auks --config /conf/auks.conf --get --uid 1234
+    sleep 1
+    run auks -f /conf/auks.conf --renew once -vvv -ddd
+    [ "$status" -ne 0 ]
+    test -e /tmp/renewed && rm /tmp/renewed
+    auks --config /conf/auks.conf --remove --uid 1234
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+}
+
+@test "Not fail when renewal script is not executable" {
+    kinit -k -t /user.keytab user
+    auks --config /conf/auks.conf --ping
+    sed -i.orig 's/HelperScript.*/HelperScript=\"\/not\/existing\/script\";/' /conf/auks.conf
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+    auks --config /conf/auks.conf --add
+    auks --config /conf/auks.conf --get --uid 1234
+    sleep 1
+    auks -f /conf/auks.conf --renew once -vvv -ddd
+    test -e /tmp/renewed && rm /tmp/renewed
+    auks --config /conf/auks.conf --remove --uid 1234
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+}
+
+@test "Not fail when renewal script is not set" {
+    kinit -k -t /user.keytab user
+    auks --config /conf/auks.conf --ping
+    sed -i.orig 's/HelperScript.*/HelperScript=\"\";/' /conf/auks.conf
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+    auks --config /conf/auks.conf --add
+    auks --config /conf/auks.conf --get --uid 1234
+    sleep 1
+    auks -f /conf/auks.conf --renew once -vvv -ddd
+    test -e /tmp/renewed && rm /tmp/renewed
+    auks --config /conf/auks.conf --remove --uid 1234
+    run auks --config /conf/auks.conf --get --uid 1234
+    [ "$status" -ne 0 ]
+}
