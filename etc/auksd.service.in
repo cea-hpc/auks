@@ -1,6 +1,6 @@
 [Unit]
 Description=Auks External Kerberos Credential Support Daemon
-After=network.target
+After=network-online.target
 
 [Service]
 Type=simple
