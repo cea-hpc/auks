@@ -19,6 +19,7 @@ services:
   kdc:
     image: quay.io/cea-hpc/krb5-kdc-server-example-com
     domainname: example.com
+    hostname: kdc
     healthcheck:
       test: ["CMD", "kadmin.local", "list_principals"]
       interval: 10s

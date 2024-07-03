@@ -27,7 +27,7 @@ function teardown() {
 }
 
 @test "Ping as host" {
-    kinit -k
+    kinit -k host/$(hostname -f)@EXAMPLE.COM
     auks -f /conf/auks.conf -p
     auks -f /conf/auks.conf --ping
 }
