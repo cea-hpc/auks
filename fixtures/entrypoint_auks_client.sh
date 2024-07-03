@@ -10,7 +10,7 @@ fi
 $KADMIN ktadd -k /etc/krb5.keytab host/$(hostname -f)@EXAMPLE.COM
 
 klist -kt
-kinit -k
+kinit -k host/$(hostname -f)@EXAMPLE.COM
 
 export KRB5_TRACE=/dev/stderr
 exec $@
