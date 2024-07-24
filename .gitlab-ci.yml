@@ -1,16 +1,18 @@
-build:
-  stage: build
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+
+default:
+  before_script:
+    - docker info
+    - docker-compose version
+
+
+test:
   script:
-    - autoreconf -fvi
-    - ./configure
-    - make rpm
-  artifacts:
-    paths:
-      - auks*rpm
-
-
-# run tests using the binary built before
-#test:
-#  stage: test
-#  script:
-#    - ./test.sh
+    - cd tests
+    - docker-compose build --parallel
+    - docker-compose up -d --force-recreate
+    - docker-compose exec -ti auks_server useradd -M -u 2000 auks_admin
+    - docker-compose exec -ti auks_server useradd -M -u 2001 auks_user
+    - docker-compose exec -ti auks_server useradd -M -u 2002 auks_guest
+    - docker-compose exec -ti auks_client bats /tests/bats/

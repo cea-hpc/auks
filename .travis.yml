@@ -1,3 +1,9 @@
+services:
+  - docker
+
+git:
+  submodules: true
+
 language: c
 
 os: linux
@@ -6,10 +12,11 @@ arch:
   - amd64
   - arm64
 
-compiler:
-  - gcc
-
 script:
-  - autoreconf -fvi
-  - ./configure
-  - make
+  - cd tests
+  - docker-compose build --parallel
+  - docker-compose up -d --force-recreate
+  - docker-compose exec -ti auks_server useradd -M -u 2000 auks_admin
+  - docker-compose exec -ti auks_server useradd -M -u 2001 auks_user
+  - docker-compose exec -ti auks_server useradd -M -u 2002 auks_guest
+  - docker-compose exec -ti auks_client bats --tap /tests/bats/
