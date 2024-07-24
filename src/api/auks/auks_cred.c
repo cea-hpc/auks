@@ -217,16 +217,25 @@ int auks_cred_init(auks_cred_t * credential, char *data, size_t length)
 		fstatus = AUKS_ERROR_CRED_INIT_KRB_PRINC_TO_UNAME ;
 		goto string_exit;
 	}
+	auks_log("Succesfully converted the '%s' principal to a local name '%s'", credential->info.principal, username);
 
 	/* associated uid from username */
 	fstatus = getpwnam_r(username,&user_pwent,pwnam_buffer,
 			     pwnam_buffer_length,&p_pwent) ;
 	if (fstatus) {
-		auks_log("unable to get %s pwnam entry : %s",username,
+		auks_log("Unexpected error while retrieving pwnam entry for '%s' : %s",username,
 			 strerror(fstatus)) ;
 		fstatus = AUKS_ERROR_CRED_INIT_GETPWNAM ;
 		goto string_exit;
 	}
+
+	if (!p_pwent) {
+		auks_log("No password entry found for user '%s'",username);
+		fstatus = AUKS_ERROR_CRED_INIT_GETPWNAM;
+		goto string_exit;
+	}
+
+	auks_log("Succesfully retrieved the password entry of the user '%s', uid is '%d'", username, user_pwent.pw_uid);
 
 	/* uid information */
 	credential->info.uid = user_pwent.pw_uid;
