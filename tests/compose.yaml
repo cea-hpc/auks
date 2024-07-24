@@ -1,0 +1,78 @@
+services:
+  auks_server:
+    build:
+      context: ../
+      target: auks_server
+    image: quay.io/cea-hpc/auks
+    healthcheck:
+      test: ["CMD", "auks", "-f", "/conf/auks.conf", "-p"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
+    environment:
+      - KRB5_TRACE=/dev/stderr
+      - KRB5_CONFIG=/run/secrets/krb5_conf
+      - KRB5_KTNAME=/krb5-keytabs/auksd.keytab
+      - KRB5_PRINCIPAL=auksd@EXAMPLE.COM
+      - AUKS_PRIV_RENEW_INT=1
+    command:
+      - "-vvvvv"
+      - "-ddddd"
+    volumes:
+      - type: bind
+        source: ./auks_conf/
+        target: /auks/etc/
+      - krb5_keytabs:/krb5-keytabs
+    secrets:
+      - krb5_conf
+    depends_on:
+      kdc:
+        condition: service_healthy
+  kdc:
+    image: quay.io/cea-hpc/krb5-kdc-server-example-com
+    domainname: example.com
+    hostname: kdc
+    healthcheck:
+      test: ["CMD", "kadmin.local", "list_principals"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - krb5_keytabs:/krb5-keytabs
+
+  auks_client:
+    build:
+      context: ../
+      target: auks_test
+    image: quay.io/cea-hpc/auks_test
+    command:
+      - "-x"
+      - "/tests/auks_tests_bootstrap.sh"
+      - "sleep"
+      - "infinity"
+    volumes:
+      - type: bind
+        source: ./auks_conf/
+        target: /auks/etc/
+      - type: bind
+        source: .
+        target: /tests/
+      - krb5_keytabs:/krb5-keytabs
+    environment:
+      - KRB5_CONFIG=/run/secrets/krb5_conf
+      - KRB5_TRACE=/dev/stderr
+      - KRB5CCNAME=/tmp/krb5cc
+    secrets:
+      - krb5_conf
+    depends_on:
+      kdc:
+        condition: service_healthy
+
+secrets:
+  krb5_conf:
+    file: ./krb5.conf
+
+volumes:
+  krb5_keytabs:

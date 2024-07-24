@@ -138,3 +138,6 @@ flycheck_*.el
 /auks*.tar.gz
 /auks*.rpm
 /.rpmbuild
+
+# Gitlab build
+/builds/
